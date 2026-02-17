@@ -152,11 +152,29 @@ Available tasks:
 
 - `dumbfun: tests`
 - `dumbfun: run server`
-- `dumbfun: devnet smoke`
+- `dumbfun: devnet smoke (Helius)`
+- `dumbfun: rpc rate-limit probe (Helius)`
 
 Open **Terminal → Run Task...** and choose one.
 
 ---
+
+
+### Testing rate limiting with your Helius RPC
+
+If you specifically want to test rate limiting behavior, run:
+
+```bash
+python scripts/rpc_rate_limit_probe.py --rpc-url "https://devnet.helius-rpc.com/?api-key=bfcf5be8-dc1e-4ea9-9799-2e8228720b37" --requests 20
+```
+
+Interpretation:
+
+- `rate_limited_429 > 0`: you are being rate limited.
+- `forbidden_403 > 0`: endpoint/policy denied that method.
+- `ok > 0`: RPC is reachable for regular read calls.
+
+Note: some provider endpoints may allow read methods but block faucet-style calls (`requestAirdrop`) with 403.
 
 ## API endpoints
 

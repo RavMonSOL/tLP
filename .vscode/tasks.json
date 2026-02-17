@@ -16,9 +16,16 @@
       "problemMatcher": []
     },
     {
-      "label": "dumbfun: devnet smoke",
+      "label": "dumbfun: devnet smoke (Helius)",
       "type": "shell",
-      "command": "python scripts/devnet_smoke_test.py --agents 3 --ticks 1 --rpc-url https://api.devnet.solana.com",
+      "command": "python scripts/devnet_smoke_test.py --agents 3 --ticks 1 --rpc-url https://devnet.helius-rpc.com/?api-key=bfcf5be8-dc1e-4ea9-9799-2e8228720b37",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "dumbfun: rpc rate-limit probe (Helius)",
+      "type": "shell",
+      "command": "python scripts/rpc_rate_limit_probe.py --rpc-url https://devnet.helius-rpc.com/?api-key=bfcf5be8-dc1e-4ea9-9799-2e8228720b37 --requests 20",
       "group": "test",
       "problemMatcher": []
     }

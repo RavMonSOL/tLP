@@ -75,7 +75,7 @@ def main() -> None:
     except Exception as exc:  # pragma: no cover
         raise SystemExit(
             f"Devnet smoke test failed: {exc}\n"
-            "Tip: faucet/RPC limits can cause transient failures (429). Retry later or pass --rpc-url."
+            "Tip: public RPC/faucet policies can fail with 429 (rate limit) or 403 (forbidden). Retry later, use another --rpc-url, or run scripts/rpc_rate_limit_probe.py."
         ) from exc
 
     print(json.dumps(result, indent=2))
