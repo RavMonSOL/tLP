@@ -8,6 +8,8 @@ def test_snapshot_shape() -> None:
     assert snap["tick"] == 0
     assert snap["agents"] == 150
     assert "outcomes" in snap
+    assert snap["execution_mode"] == "deterministic"
+    assert "finalized_transactions" in snap
     assert len(snap["leaderboard"]) <= 5
 
 

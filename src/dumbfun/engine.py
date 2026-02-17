@@ -4,7 +4,7 @@ import random
 from dataclasses import dataclass
 
 from .models import Agent, Role, SimulationState, SocialPost, Token, Wallet
-from .onchain import OnChainAdapter
+from .onchain import DeterministicOnChainAdapter, SolanaDevnetAdapter
 from .policies import buy_probability, should_launch_token, should_rug, should_shill
 
 
@@ -14,13 +14,17 @@ class EngineConfig:
     initial_sol: float = 20.0
     buy_size_range: tuple[float, float] = (0.1, 1.0)
     graduation_liquidity: float = 30.0
+    execution_mode: str = "deterministic"  # deterministic|devnet
 
 
 class SimulationEngine:
     def __init__(self, config: EngineConfig | None = None) -> None:
         self.config = config or EngineConfig()
         self.rng = random.Random(self.config.seed)
-        self.chain = OnChainAdapter(cluster="devnet")
+        if self.config.execution_mode == "devnet":
+            self.chain = SolanaDevnetAdapter()
+        else:
+            self.chain = DeterministicOnChainAdapter(cluster="devnet")
         self.state = SimulationState()
 
     def seed_agents(self, n: int) -> None:
@@ -36,9 +40,11 @@ class SimulationEngine:
             roles = [self.rng.choice(role_pool)]
             if self.rng.random() < 0.3:
                 roles.append(self.rng.choice(role_pool))
-            wallet = Wallet(address=f"wallet_{i:04d}", sol_balance=self.config.initial_sol)
+            agent_id = f"agent_{i:04d}"
+            provisioned = self.chain.provision_wallet(agent_id)
+            wallet = Wallet(address=provisioned.address, sol_balance=self.config.initial_sol)
             agent = Agent(
-                agent_id=f"agent_{i:04d}",
+                agent_id=agent_id,
                 handle=f"anon_{i:04d}",
                 roles=list(dict.fromkeys(roles)),
                 wallet=wallet,
@@ -104,7 +110,15 @@ class SimulationEngine:
             liquidity=1.0,
         )
         self.state.tokens[mint] = token
-        tx = self.chain.submit("launch", agent.agent_id, mint, amount=0.0, price=token.price, tick=self.state.tick)
+        tx = self.chain.submit(
+            "launch",
+            agent.agent_id,
+            mint,
+            amount=0.0,
+            price=token.price,
+            tick=self.state.tick,
+            wallet_address=agent.wallet.address,
+        )
         self.state.tx_history.append(tx)
         agent.memory.append(f"launched:{mint}")
 
@@ -117,7 +131,15 @@ class SimulationEngine:
         agent.wallet.token_balances[token.mint] = agent.wallet.token_balances.get(token.mint, 0.0) + qty
         token.liquidity += amount_sol
         token.price *= 1.01
-        tx = self.chain.submit("buy", agent.agent_id, token.mint, amount=qty, price=token.price, tick=self.state.tick)
+        tx = self.chain.submit(
+            "buy",
+            agent.agent_id,
+            token.mint,
+            amount=qty,
+            price=token.price,
+            tick=self.state.tick,
+            wallet_address=agent.wallet.address,
+        )
         self.state.tx_history.append(tx)
 
     def _sell(self, agent: Agent, token: Token) -> None:
@@ -130,7 +152,15 @@ class SimulationEngine:
         agent.wallet.sol_balance += proceeds
         token.liquidity = max(0.0, token.liquidity - proceeds)
         token.price *= 0.995
-        tx = self.chain.submit("sell", agent.agent_id, token.mint, amount=qty, price=token.price, tick=self.state.tick)
+        tx = self.chain.submit(
+            "sell",
+            agent.agent_id,
+            token.mint,
+            amount=qty,
+            price=token.price,
+            tick=self.state.tick,
+            wallet_address=agent.wallet.address,
+        )
         self.state.tx_history.append(tx)
 
     def _rug(self, agent: Agent, token: Token) -> None:
@@ -140,7 +170,15 @@ class SimulationEngine:
         founder = self.state.agents[token.founder_id]
         founder.wallet.sol_balance += stolen
         founder.reputation -= 5
-        tx = self.chain.submit("rug", agent.agent_id, token.mint, amount=stolen, price=token.price, tick=self.state.tick)
+        tx = self.chain.submit(
+            "rug",
+            agent.agent_id,
+            token.mint,
+            amount=stolen,
+            price=token.price,
+            tick=self.state.tick,
+            wallet_address=agent.wallet.address,
+        )
         self.state.tx_history.append(tx)
         self._post(agent, token, f"Liquidity gone on {token.ticker}. Blame the market.")
 

@@ -66,6 +66,8 @@ class TxRecord:
     token_mint: str | None
     amount: float
     price: float
+    finalized: bool = False
+    slot: int = -1
 
 
 @dataclass
