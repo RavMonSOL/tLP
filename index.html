@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SPL Airdrop Wallet Scanner</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bs58@6.0.0/dist/index.min.js"></script>
+  </head>
+  <body>
+    <main class="container">
+      <h1>SPL Airdrop Wallet Scanner</h1>
+      <p class="subtitle">Generate fresh Solana wallets, then scan balances for one SPL token mint.</p>
+
+      <section class="panel">
+        <label>
+          RPC endpoint
+          <input id="rpc" type="url" value="https://api.mainnet-beta.solana.com" />
+        </label>
+
+        <label>
+          SPL token mint address
+          <input id="mint" type="text" placeholder="Enter token mint public key" />
+        </label>
+
+        <label>
+          Number of wallets
+          <input id="count" type="number" min="1" max="500" value="10" />
+        </label>
+
+        <div class="buttons">
+          <button id="generate">1) Generate Wallets</button>
+          <button id="scan" disabled>2) Scan Token Balances</button>
+          <button id="download" disabled>Download JSON</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Results</h2>
+        <div id="status">No wallets yet.</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Wallet</th>
+                <th>Token Balance</th>
+                <th>Secret Key (base58)</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
