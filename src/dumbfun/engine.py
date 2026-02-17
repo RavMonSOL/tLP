@@ -16,6 +16,8 @@ class EngineConfig:
     graduation_liquidity: float = 30.0
     execution_mode: str = "deterministic"  # deterministic|devnet
     devnet_rpc_url: str = "https://api.devnet.solana.com"
+    devnet_airdrop_lamports: int = 1_000_000_000
+    devnet_commitment: str = "confirmed"
 
 
 class SimulationEngine:
@@ -23,7 +25,11 @@ class SimulationEngine:
         self.config = config or EngineConfig()
         self.rng = random.Random(self.config.seed)
         if self.config.execution_mode == "devnet":
-            self.chain = SolanaDevnetAdapter(rpc_url=self.config.devnet_rpc_url)
+            self.chain = SolanaDevnetAdapter(
+                rpc_url=self.config.devnet_rpc_url,
+                airdrop_lamports=self.config.devnet_airdrop_lamports,
+                commitment=self.config.devnet_commitment,
+            )
         else:
             self.chain = DeterministicOnChainAdapter(cluster="devnet")
         self.state = SimulationState()

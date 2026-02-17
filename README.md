@@ -133,12 +133,14 @@ This is the run-on-demand test you asked for.
 Script:
 
 ```bash
-python scripts/devnet_smoke_test.py --agents 3 --ticks 1
+python scripts/devnet_smoke_test.py --agents 1 --ticks 0 --lamports 1000000000 --commitment confirmed --rpc-url "https://devnet.helius-rpc.com/?api-key=<api-key>"
 ```
 
 What it does:
 
 - boots engine in `devnet` mode,
+
+This matches the documented `requestAirdrop` shape: `params: [address, lamports, {"commitment": "confirmed"}]`.
 - seeds wallets,
 - runs short simulation,
 - prints tx signatures + finalization summary,
@@ -175,6 +177,14 @@ Interpretation:
 - `ok > 0`: RPC is reachable for regular read calls.
 
 Note: some provider endpoints may allow read methods but block faucet-style calls (`requestAirdrop`) with 403.
+
+If your provider has a daily faucet quota (for example: `1 SOL per project per day`), run with:
+
+```bash
+python scripts/devnet_smoke_test.py --agents 1 --ticks 0 --lamports 1000000000 --commitment confirmed --rpc-url "https://devnet.helius-rpc.com/?api-key=<api-key>" --allow-faucet-rate-limit
+```
+
+That mode treats faucet-quota errors as a successful diagnostic (RPC reachable, faucet exhausted).
 
 ## API endpoints
 

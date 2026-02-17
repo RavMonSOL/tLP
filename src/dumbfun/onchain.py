@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import time
+import urllib.error
 import urllib.request
 from dataclasses import dataclass
 from typing import Optional
@@ -75,23 +76,34 @@ class DeterministicOnChainAdapter:
 
 
 class SolanaDevnetAdapter:
-    """Real Solana devnet adapter using JSON-RPC.
+    """Real Solana devnet adapter using JSON-RPC."""
 
-    Prototype behavior:
-    - provisions deterministic pseudo-wallets
-    - maps each submit() to a small requestAirdrop tx for that wallet as verifiable on-chain action
-    - reconciles finalization via getSignatureStatuses
-    """
-
-    def __init__(self, rpc_url: str = "https://api.devnet.solana.com", timeout_s: int = 20) -> None:
+    def __init__(
+        self,
+        rpc_url: str = "https://api.devnet.solana.com",
+        timeout_s: int = 20,
+        airdrop_lamports: int = 1_000_000_000,
+        commitment: str = "confirmed",
+    ) -> None:
         self.rpc_url = rpc_url
         self.timeout_s = timeout_s
+        self.airdrop_lamports = airdrop_lamports
+        self.commitment = commitment
 
     def _rpc(self, method: str, params: list) -> dict:
         payload = json.dumps({"jsonrpc": "2.0", "id": 1, "method": method, "params": params}).encode("utf-8")
         req = urllib.request.Request(self.rpc_url, data=payload, headers={"Content-Type": "application/json"})
-        with urllib.request.urlopen(req, timeout=self.timeout_s) as resp:  # noqa: S310
-            data = json.loads(resp.read().decode("utf-8"))
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout_s) as resp:  # noqa: S310
+                data = json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            details = ""
+            try:
+                details = exc.read().decode("utf-8")
+            except Exception:  # pragma: no cover
+                details = ""
+            raise RuntimeError(f"HTTP {exc.code} on {method}: {details or exc.reason}") from exc
+
         if "error" in data:
             raise RuntimeError(f"Solana RPC error on {method}: {data['error']}")
         return data["result"]
@@ -104,8 +116,11 @@ class SolanaDevnetAdapter:
         secret_hint = hashlib.sha256(bytes(kp)).hexdigest()[:16]
         return ProvisionedWallet(address=address, secret_hint=secret_hint)
 
-    def request_airdrop(self, address: str, lamports: int = 1_000_000) -> str:
-        return self._rpc("requestAirdrop", [address, lamports])
+    def request_airdrop(self, address: str, lamports: Optional[int] = None, commitment: Optional[str] = None) -> str:
+        lamports = lamports if lamports is not None else self.airdrop_lamports
+        commitment = commitment if commitment is not None else self.commitment
+        params = [address, lamports, {"commitment": commitment}]
+        return self._rpc("requestAirdrop", params)
 
     def get_balance(self, address: str) -> int:
         result = self._rpc("getBalance", [address, {"commitment": "confirmed"}])
@@ -140,7 +155,7 @@ class SolanaDevnetAdapter:
     ) -> TxRecord:
         if wallet_address is None:
             raise ValueError("wallet_address is required for real devnet submission")
-        signature = self.request_airdrop(wallet_address, lamports=1000)
+        signature = self.request_airdrop(wallet_address)
         finalized, slot = self.reconcile_signature(signature)
         return TxRecord(
             signature=signature,

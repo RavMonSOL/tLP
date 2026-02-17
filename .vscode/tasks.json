@@ -18,7 +18,7 @@
     {
       "label": "dumbfun: devnet smoke (Helius)",
       "type": "shell",
-      "command": "python scripts/devnet_smoke_test.py --agents 3 --ticks 1 --rpc-url https://devnet.helius-rpc.com/?api-key=bfcf5be8-dc1e-4ea9-9799-2e8228720b37",
+      "command": "python scripts/devnet_smoke_test.py --agents 1 --ticks 0 --lamports 1000000000 --commitment confirmed --rpc-url https://devnet.helius-rpc.com/?api-key=bfcf5be8-dc1e-4ea9-9799-2e8228720b37 --allow-faucet-rate-limit",
       "group": "test",
       "problemMatcher": []
     },
