@@ -15,6 +15,7 @@ class EngineConfig:
     buy_size_range: tuple[float, float] = (0.1, 1.0)
     graduation_liquidity: float = 30.0
     execution_mode: str = "deterministic"  # deterministic|devnet
+    devnet_rpc_url: str = "https://api.devnet.solana.com"
 
 
 class SimulationEngine:
@@ -22,7 +23,7 @@ class SimulationEngine:
         self.config = config or EngineConfig()
         self.rng = random.Random(self.config.seed)
         if self.config.execution_mode == "devnet":
-            self.chain = SolanaDevnetAdapter()
+            self.chain = SolanaDevnetAdapter(rpc_url=self.config.devnet_rpc_url)
         else:
             self.chain = DeterministicOnChainAdapter(cluster="devnet")
         self.state = SimulationState()

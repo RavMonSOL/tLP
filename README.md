@@ -1,47 +1,162 @@
 # dumb.fun — Autonomous Solana Memecoin Ecosystem Simulator
 
-This repository includes a runnable prototype for a 2024-style Solana memecoin ecosystem simulation.
+This repo contains a runnable prototype of a 2024-style Solana memecoin simulation with agent behaviors, API endpoints, and a devnet execution mode.
 
-## What is working now
+## Features
 
-- Multi-role AI-agent simulation loop (traders/founders/influencers/scammers/builders/LPs).
-- Token lifecycle primitives (launch, buy/sell, liquidity, graduation, rugs).
-- **Execution adapters**:
-  - deterministic adapter for fast local testing,
-  - Solana devnet adapter using real JSON-RPC submission (`requestAirdrop`) and signature reconciliation.
-- Wallet provisioning for each agent through adapter-level `provision_wallet`.
-- Event indexing/reconciliation via `EventIndexer` for signature finalization checks.
-- HTTP prototype server with live state and workflow endpoints.
-- Optional WebSocket streaming server for live snapshots.
+- Multi-role AI-agent simulation loop (trader/founder/influencer/scammer/builder/LP).
+- Token lifecycle simulation (launch, buy/sell, graduation, rugs).
+- Two execution adapters:
+  - `deterministic` (local test mode)
+  - `devnet` (real Solana JSON-RPC calls + signature reconciliation)
+- HTTP dashboard + API (`run_server.py`).
+- Optional WebSocket snapshot stream (`run_ws_server.py`).
 - Replay/regime/strategy experiment workflows.
+- Devnet smoke test script for VS Code (`scripts/devnet_smoke_test.py`).
 
-## Quickstart
+---
+
+## Dependencies
+
+### Python
+
+- Python **3.10+** (3.11/3.12 recommended)
+- `pip`
+
+Install:
 
 ```bash
-python main.py
+python -m pip install -r requirements.txt
+```
+
+`requirements.txt` includes:
+
+- `pytest` (testing)
+- `websockets` (optional runtime for `run_ws_server.py`)
+- `solders` (required for real devnet wallet/public-key generation)
+
+---
+
+## Platform setup
+
+### Windows (VS Code)
+
+1. Install Python from python.org and check **"Add Python to PATH"**.
+2. In VS Code, install extensions:
+   - Python (ms-python.python)
+   - Pylance (ms-python.vscode-pylance)
+3. Open the repo folder in VS Code.
+4. Create and activate virtual env in terminal:
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+If PowerShell blocks activation, run once (Admin PowerShell):
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+### Linux
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+### macOS (optional)
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+---
+
+## Quick usage
+
+### 1) Run tests
+
+```bash
 python -m pytest -q
 ```
 
-Run HTTP prototype server (deterministic mode):
+### 2) Run local deterministic simulation demo
+
+```bash
+python main.py
+```
+
+### 3) Run HTTP server + dashboard
 
 ```bash
 python run_server.py
 # open http://127.0.0.1:8787
 ```
 
-Run HTTP prototype server in devnet mode:
+### 4) Run in devnet execution mode
+
+Linux/macOS:
 
 ```bash
 DUMBFUN_EXECUTION_MODE=devnet python run_server.py
 ```
 
-Run WebSocket live stream (requires websockets package):
+Windows PowerShell:
+
+```powershell
+$env:DUMBFUN_EXECUTION_MODE = "devnet"
+python run_server.py
+```
+
+### 5) Optional WebSocket stream
 
 ```bash
-pip install websockets
 python run_ws_server.py
-# connect ws://127.0.0.1:8790
+# ws://127.0.0.1:8790
 ```
+
+---
+
+## Devnet smoke test (for VS Code)
+
+This is the run-on-demand test you asked for.
+
+Script:
+
+```bash
+python scripts/devnet_smoke_test.py --agents 3 --ticks 1
+```
+
+What it does:
+
+- boots engine in `devnet` mode,
+- seeds wallets,
+- runs short simulation,
+- prints tx signatures + finalization summary,
+- exits non-zero if no txs or no finalized txs.
+
+### Run from VS Code Tasks
+
+Included task file: `.vscode/tasks.json`
+
+Available tasks:
+
+- `dumbfun: tests`
+- `dumbfun: run server`
+- `dumbfun: devnet smoke`
+
+Open **Terminal → Run Task...** and choose one.
+
+---
 
 ## API endpoints
 
@@ -51,11 +166,9 @@ python run_ws_server.py
 - `GET /api/workflows/regimes?seed=7&ticks=20`
 - `GET /api/workflows/strategies?ticks=20`
 
-## Project structure
+---
 
-- `src/dumbfun/engine.py` — simulation runtime + validation.
-- `src/dumbfun/onchain.py` — deterministic and real devnet adapters.
-- `src/dumbfun/indexer.py` — event reconciliation for transaction signatures.
-- `src/dumbfun/prototype.py` — HTTP API + dashboard.
-- `src/dumbfun/streaming.py` — WebSocket snapshot streaming.
-- `src/dumbfun/workflows.py` — replay/regime/strategy workflows.
+## Notes
+
+- Current devnet execution bridge maps actions to verifiable devnet signatures using `requestAirdrop` for safety and simplicity.
+- This is a prototype execution layer; full signed token trading transactions are a next step.

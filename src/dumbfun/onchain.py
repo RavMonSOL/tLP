@@ -2,13 +2,17 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import time
 import urllib.request
 from dataclasses import dataclass
 from typing import Optional
 
 from .models import TxRecord
+
+try:
+    from solders.keypair import Keypair
+except ImportError:  # pragma: no cover
+    Keypair = None
 
 _BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
@@ -93,9 +97,12 @@ class SolanaDevnetAdapter:
         return data["result"]
 
     def provision_wallet(self, agent_id: str) -> ProvisionedWallet:
-        seed = hashlib.sha256(f"devnet:{agent_id}:{os.urandom(8).hex()}".encode("utf-8")).digest()
-        address = _base58_encode(seed[:32])
-        return ProvisionedWallet(address=address, secret_hint=seed.hex()[:16])
+        if Keypair is None:
+            raise RuntimeError("solders is required for devnet mode. Install with `pip install solders`.")
+        kp = Keypair()
+        address = str(kp.pubkey())
+        secret_hint = hashlib.sha256(bytes(kp)).hexdigest()[:16]
+        return ProvisionedWallet(address=address, secret_hint=secret_hint)
 
     def request_airdrop(self, address: str, lamports: int = 1_000_000) -> str:
         return self._rpc("requestAirdrop", [address, lamports])

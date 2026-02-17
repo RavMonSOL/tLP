@@ -1,0 +1,26 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "dumbfun: tests",
+      "type": "shell",
+      "command": "python -m pytest -q",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "dumbfun: run server",
+      "type": "shell",
+      "command": "python run_server.py",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "dumbfun: devnet smoke",
+      "type": "shell",
+      "command": "python scripts/devnet_smoke_test.py --agents 3 --ticks 1 --rpc-url https://api.devnet.solana.com",
+      "group": "test",
+      "problemMatcher": []
+    }
+  ]
+}

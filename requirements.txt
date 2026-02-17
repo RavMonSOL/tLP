@@ -1,0 +1,8 @@
+# Core runtime
+pytest>=8.0
+
+# Optional runtime features
+websockets>=12.0
+
+# Required for real devnet mode wallet provisioning
+solders>=0.21.0
