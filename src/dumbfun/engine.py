@@ -78,6 +78,20 @@ class SimulationEngine:
             self.step()
         return self.state
 
+    def validate_state(self) -> None:
+        for agent in self.state.agents.values():
+            if agent.wallet.sol_balance < -1e-9:
+                raise ValueError(f"negative SOL balance for {agent.agent_id}")
+            for mint, qty in agent.wallet.token_balances.items():
+                if qty < -1e-9:
+                    raise ValueError(f"negative token balance for {agent.agent_id}:{mint}")
+
+        for token in self.state.tokens.values():
+            if token.price <= 0:
+                raise ValueError(f"non-positive token price for {token.mint}")
+            if token.liquidity < -1e-9:
+                raise ValueError(f"negative token liquidity for {token.mint}")
+
     def _launch_token(self, agent: Agent) -> None:
         mint = f"mint_{self.state.tick}_{len(self.state.tokens):05d}"
         token = Token(

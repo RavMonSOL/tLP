@@ -1,4 +1,4 @@
-from src.dumbfun.dashboard import pnl_leaderboard, trending_tokens
+from src.dumbfun.dashboard import pnl_leaderboard, token_outcomes, trending_tokens
 from src.dumbfun.engine import SimulationEngine
 
 
@@ -6,9 +6,11 @@ def run_demo() -> None:
     engine = SimulationEngine()
     engine.seed_agents(150)
     state = engine.run(50)
+    engine.validate_state()
 
     print(f"ticks={state.tick} agents={len(state.agents)} tokens={len(state.tokens)} txs={len(state.tx_history)} posts={len(state.posts)}")
-    print("top pnl:", pnl_leaderboard(state, top_n=5))
+    print("outcomes:", token_outcomes(state))
+    print("top pnl:", pnl_leaderboard(state, top_n=5, initial_sol=engine.config.initial_sol))
     print("trending:", trending_tokens(state, top_n=5))
 
 
