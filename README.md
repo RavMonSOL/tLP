@@ -1,41 +1,42 @@
 # dumb.fun — Autonomous Solana Memecoin Ecosystem Simulator
 
-A research-oriented architecture and implementation blueprint for a **2024-style Solana memecoin ecosystem simulation** where autonomous AI agents launch tokens, trade, coordinate socially, and interact with real on-chain state.
+This repository now includes a runnable **MVP simulation engine** for a 2024-style Solana memecoin ecosystem with autonomous agents.
 
-## What this repo provides (current state)
+## Implemented in this iteration
 
-This repository currently contains:
+- Multi-role AI-agent simulation loop (traders/founders/influencers/scammers/builders/LPs).
+- Token lifecycle primitives:
+  - launches,
+  - buys/sells,
+  - liquidity growth,
+  - graduation trigger,
+  - rug-pull behavior.
+- Simulated on-chain adapter that emits deterministic tx signatures per action.
+- Social dynamics primitives (shill posts and token trend extraction).
+- Dashboard helper functions:
+  - PnL leaderboard,
+  - trending tokens.
+- Test suite validating activity generation, tx verifiability, and leaderboard/trend outputs.
 
-- A production-oriented **system architecture** for a hybrid simulation + on-chain execution platform.
-- A concrete **agent design** (roles, memory, goals, risk model, learning loop).
-- A detailed **execution layer** for converting agent intent into Solana transactions with verification and state reconciliation.
-- An implementation **roadmap** from local simulation to devnet mirror mode and eventually mainnet-ready operations.
+## Quickstart
 
-See:
+```bash
+python main.py
+python -m pytest -q
+```
 
-- `docs/architecture.md`
-- `docs/agent-design.md`
-- `docs/execution-layer.md`
-- `docs/roadmap.md`
+## Project structure
 
-## Core principles
+- `src/dumbfun/models.py` — core entities/state.
+- `src/dumbfun/engine.py` — simulation runtime.
+- `src/dumbfun/onchain.py` — deterministic devnet-like tx adapter.
+- `src/dumbfun/policies.py` — role/behavior policy functions.
+- `src/dumbfun/dashboard.py` — metrics/leaderboards.
+- `tests/test_simulation.py` — regression tests.
 
-1. **Emergence first**: agents act with partial information, bounded rationality, and social influence.
-2. **Verifiability always**: all economic actions are traceable with wallet addresses and tx signatures.
-3. **Dual-state synchronization**: internal beliefs vs. canonical on-chain state.
-4. **Safety rails**: explicit environment gates, treasury controls, and kill switches before real deployment.
+## Next steps
 
-## Suggested stack
-
-- **Backend**: TypeScript (Node.js + Fastify/Nest) or Rust services.
-- **Chain**: Solana web3.js / Anchor programs.
-- **State/Eventing**: PostgreSQL + Redis + Kafka/Redpanda.
-- **AI/Multi-agent**: policy models + memory store + orchestrated simulation loop.
-- **Frontend**: React + WebSockets for real-time dashboards.
-
-## Intended outcomes
-
-- Research platform for memecoin market dynamics.
-- Testbed for strategy stress-testing and AI coordination.
-- Hybrid AI-vs-AI and AI-vs-human market experiments.
-
+- Swap deterministic adapter for real Solana devnet submission/reconciliation.
+- Add wallet provisioning and event indexer.
+- Add WebSocket-backed UI for launchpad/social/leaderboards.
+- Add replay, regime testing, and strategy experimentation workflows.
