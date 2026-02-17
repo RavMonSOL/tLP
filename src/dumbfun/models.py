@@ -17,6 +17,7 @@ class Role(str, Enum):
 @dataclass
 class Wallet:
     address: str
+    private_key: str | None = None
     sol_balance: float = 0.0
     token_balances: Dict[str, float] = field(default_factory=dict)
 

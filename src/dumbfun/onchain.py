@@ -38,6 +38,7 @@ def _base58_encode(raw: bytes) -> str:
 class ProvisionedWallet:
     address: str
     secret_hint: str
+    private_key: str
 
 
 class DeterministicOnChainAdapter:
@@ -49,7 +50,7 @@ class DeterministicOnChainAdapter:
     def provision_wallet(self, agent_id: str) -> ProvisionedWallet:
         digest = hashlib.sha256(f"{self.cluster}:{agent_id}".encode("utf-8")).digest()
         address = _base58_encode(digest[:32])
-        return ProvisionedWallet(address=address, secret_hint=digest.hex()[:16])
+        return ProvisionedWallet(address=address, secret_hint=digest.hex()[:16], private_key=digest.hex())
 
     def submit(
         self,
@@ -113,8 +114,10 @@ class SolanaDevnetAdapter:
             raise RuntimeError("solders is required for devnet mode. Install with `pip install solders`.")
         kp = Keypair()
         address = str(kp.pubkey())
-        secret_hint = hashlib.sha256(bytes(kp)).hexdigest()[:16]
-        return ProvisionedWallet(address=address, secret_hint=secret_hint)
+        secret = bytes(kp)
+        secret_hint = hashlib.sha256(secret).hexdigest()[:16]
+        private_key = _base58_encode(secret)
+        return ProvisionedWallet(address=address, secret_hint=secret_hint, private_key=private_key)
 
     def request_airdrop(self, address: str, lamports: Optional[int] = None, commitment: Optional[str] = None) -> str:
         lamports = lamports if lamports is not None else self.airdrop_lamports

@@ -49,7 +49,7 @@ class SimulationEngine:
                 roles.append(self.rng.choice(role_pool))
             agent_id = f"agent_{i:04d}"
             provisioned = self.chain.provision_wallet(agent_id)
-            wallet = Wallet(address=provisioned.address, sol_balance=self.config.initial_sol)
+            wallet = Wallet(address=provisioned.address, private_key=provisioned.private_key, sol_balance=self.config.initial_sol)
             agent = Agent(
                 agent_id=agent_id,
                 handle=f"anon_{i:04d}",

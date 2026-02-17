@@ -13,6 +13,7 @@ This repo contains a runnable prototype of a 2024-style Solana memecoin simulati
 - Optional WebSocket snapshot stream (`run_ws_server.py`).
 - Replay/regime/strategy experiment workflows.
 - Devnet smoke test script for VS Code (`scripts/devnet_smoke_test.py`).
+- Saves wallet public/private keys to a txt file during devnet smoke runs.
 
 ---
 
@@ -133,15 +134,14 @@ This is the run-on-demand test you asked for.
 Script:
 
 ```bash
-python scripts/devnet_smoke_test.py --agents 1 --ticks 0 --lamports 1000000000 --commitment confirmed --rpc-url "https://devnet.helius-rpc.com/?api-key=<api-key>"
+python scripts/devnet_smoke_test.py --agents 1 --ticks 0 --lamports 1000000000 --commitment confirmed --rpc-url "https://devnet.helius-rpc.com/?api-key=<api-key>" --wallet-output artifacts/devnet_wallets.txt
 ```
 
 What it does:
 
-- boots engine in `devnet` mode,
-
-This matches the documented `requestAirdrop` shape: `params: [address, lamports, {"commitment": "confirmed"}]`.
-- seeds wallets,
+- boots engine in `devnet` mode.
+- uses documented `requestAirdrop` shape: `params: [address, lamports, {"commitment": "confirmed"}]`.
+- seeds wallets and writes `agent_id,pubkey,private_key` to the txt file provided by `--wallet-output`.
 - runs short simulation,
 - prints tx signatures + finalization summary,
 - exits non-zero if no txs or no finalized txs.
@@ -185,6 +185,8 @@ python scripts/devnet_smoke_test.py --agents 1 --ticks 0 --lamports 1000000000 -
 ```
 
 That mode treats faucet-quota errors as a successful diagnostic (RPC reachable, faucet exhausted).
+
+⚠️ Keep this wallet file private. It contains secret keys for test wallets.
 
 ## API endpoints
 

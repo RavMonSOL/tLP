@@ -12,6 +12,14 @@ sys.path.insert(0, str(ROOT))
 from src.dumbfun.engine import EngineConfig, SimulationEngine
 
 
+def export_wallets(engine: SimulationEngine, output_path: Path) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    lines = ["# dumb.fun devnet wallet export\n", "# agent_id,pubkey,private_key\n"]
+    for agent in engine.state.agents.values():
+        lines.append(f"{agent.agent_id},{agent.wallet.address},{agent.wallet.private_key or ''}\n")
+    output_path.write_text("".join(lines), encoding="utf-8")
+
+
 def run_devnet_smoke(
     agents: int,
     ticks: int,
@@ -19,6 +27,7 @@ def run_devnet_smoke(
     rpc_url: str,
     lamports: int,
     commitment: str,
+    wallet_output: Path,
 ) -> dict:
     engine = SimulationEngine(
         EngineConfig(
@@ -30,6 +39,7 @@ def run_devnet_smoke(
         )
     )
     engine.seed_agents(agents)
+    export_wallets(engine, wallet_output)
 
     # Force at least one verifiable on-chain tx so smoke-test is stable when random behavior is quiet.
     first = next(iter(engine.state.agents.values()))
@@ -65,6 +75,7 @@ def run_devnet_smoke(
         "rpc_url": rpc_url,
         "lamports": lamports,
         "commitment": commitment,
+        "wallet_output": str(wallet_output),
         "tick": state.tick,
         "agents": len(state.agents),
         "tokens": len(state.tokens),
@@ -81,6 +92,7 @@ def main() -> None:
     parser.add_argument("--rpc-url", default="https://api.devnet.solana.com", help="Solana devnet RPC URL")
     parser.add_argument("--lamports", type=int, default=1_000_000_000, help="Airdrop lamports amount")
     parser.add_argument("--commitment", default="confirmed", help="Airdrop commitment (processed/confirmed/finalized)")
+    parser.add_argument("--wallet-output", default="artifacts/devnet_wallets.txt", help="Path to output wallets txt")
     parser.add_argument(
         "--sleep-s",
         type=float,
@@ -95,7 +107,15 @@ def main() -> None:
     args = parser.parse_args()
 
     try:
-        result = run_devnet_smoke(args.agents, args.ticks, args.sleep_s, args.rpc_url, args.lamports, args.commitment)
+        result = run_devnet_smoke(
+            args.agents,
+            args.ticks,
+            args.sleep_s,
+            args.rpc_url,
+            args.lamports,
+            args.commitment,
+            Path(args.wallet_output),
+        )
     except Exception as exc:  # pragma: no cover
         msg = str(exc)
         faucet_limited = "devnet faucet has a limit of 1 SOL per project per day" in msg
@@ -104,6 +124,7 @@ def main() -> None:
                 json.dumps(
                     {
                         "rpc_url": args.rpc_url,
+                        "wallet_output": args.wallet_output,
                         "status": "faucet_rate_limited",
                         "detail": msg,
                         "note": "Read RPC works, faucet quota reached for this project/API key.",
